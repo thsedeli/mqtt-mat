@@ -13,7 +13,6 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class SimpleCallback implements MqttCallback {
     private static final double MILLISTOHOURS = 3600000.0;
@@ -23,7 +22,6 @@ public class SimpleCallback implements MqttCallback {
     private static String TOPIC_PUB_EVENTS = "events";
     private static String TOPIC_PUB_CAR_STATUS = "carStatus";
     private static DistanceFinder distanceFinder;
-    private static int refreshIndex;
 
     static {
         distanceFinder = new DistanceFinder();
@@ -39,7 +37,6 @@ public class SimpleCallback implements MqttCallback {
         startTimes.put(4, (double) System.currentTimeMillis());
         startLocations.put(5, Location.builder().latitude(0).longitude(0).build());
         startTimes.put(5, (double) System.currentTimeMillis());
-        refreshIndex = 0;
     }
 
     public void connectionLost(Throwable cause) {
@@ -64,21 +61,21 @@ public class SimpleCallback implements MqttCallback {
                         .build())
                 .build();
 
-            speed = getSpeed(carCoordinates);
+        speed = getSpeed(carCoordinates);
 
-            //Create carStatus
-            CarStatus carStatus = CarStatus.builder()
-                    .carIndex(carCoordinates.getCarIndex())
-                    .type(Type.SPEED)
-                    .value(speed * KMHTOMPH) //kmh to mph
-                    .timestamp(carCoordinates.getTimestamp())
-                    .build();
+        //Create carStatus
+        CarStatus carStatus = CarStatus.builder()
+                .carIndex(carCoordinates.getCarIndex())
+                .type(Type.SPEED)
+                .value(speed * KMHTOMPH) //kmh to mph
+                .timestamp(carCoordinates.getTimestamp())
+                .build();
 
-            //reinitialize variables
-            startTimes.put(carCoordinates.getCarIndex(), (double) System.currentTimeMillis());
-            startLocations.put(carCoordinates.getCarIndex(), carCoordinates.getLocation());
+        //reinitialize variables
+        startTimes.put(carCoordinates.getCarIndex(), (double) System.currentTimeMillis());
+        startLocations.put(carCoordinates.getCarIndex(), carCoordinates.getLocation());
 
-            conn.publish(TOPIC_PUB_CAR_STATUS, gson.toJson(carStatus));
+        conn.publish(TOPIC_PUB_CAR_STATUS, gson.toJson(carStatus));
     }
 
     private double getSpeed(CarCoordinates carCoordinates) {
